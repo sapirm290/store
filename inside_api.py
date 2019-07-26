@@ -17,7 +17,7 @@ def create_category():
             response.status = 500
     else:
         response.status = 201
-    db_response['CATEGORIES'] = db_response.pop('DATA')
+    db_response['CAT_ID'] = db_response.pop('DATA')
     return json.dumps(db_response)
 
 
@@ -38,6 +38,7 @@ def list_categories():
     db_response = db.list_categories()
     if db_response["STATUS"] == "ERROR":
         response.status = 500
+    db_response['CATEGORIES'] = db_response.pop('DATA')
     return db_response
 
 

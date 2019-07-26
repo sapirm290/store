@@ -26,14 +26,15 @@ class MySQLAdapter:
     def create_category(self, name):
         if name == "":
             return self.return_object("ERROR", "Name parameter is missing", None)
-        try:
-            with self.connection.cursor() as c:
-                if(c.execute(f'SELECT * FROM categories WHERE name = "{name}"') != 0):
-                    return self.return_object("ERROR", "Category already exists", None)
-                c.execute(f'INSERT INTO categories VALUES (null, "{name}")')
-                return self.return_object("SUCCESS", None, c.lastrowid)
-        except:
-            return self.return_object("ERROR", "Internal error", None)
+        # try:
+        with self.connection.cursor() as c:
+            if(c.execute(f'SELECT * FROM categories WHERE name = "{name}"') != 0):
+                return self.return_object("ERROR", "Category already exists", None)
+            c.execute(f'INSERT INTO categories VALUES (null, "{name}")')
+            self.connection.commit()
+            return self.return_object("SUCCESS", None, c.lastrowid)
+        # except:
+        #     return self.return_object("ERROR", "Internal error", None)
 
     def delete_category(self, id):
         try:
