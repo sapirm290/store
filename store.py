@@ -1,12 +1,12 @@
-from bottle import route, run, template, static_file, get, post, delete, request
+from bottle import run, template, static_file, get, post, delete, request
 from sys import argv
 import json
-import pymysql
+from inside_api import *
+
 
 @get("/admin")
 def admin_portal():
-	return template("pages/admin.html")
-
+    return template("pages/admin.html")
 
 
 @get("/")
@@ -29,4 +29,6 @@ def images(filename):
     return static_file(filename, root='images')
 
 
-run(host='0.0.0.0', port=argv[1])
+if __name__ == "__main__":
+
+    run(host='0.0.0.0', port=7000, debug=True, reloader=True)
