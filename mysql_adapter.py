@@ -1,6 +1,26 @@
 import pymysql
 
 
+""" Commands used to create this Database on MYSQL server:
+CREATE DATABASE store;
+USE store;
+CREATE TABLE categories (
+id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+name VARCHAR(30)  UNIQUE NOT NULL
+);
+CREATE TABLE products (
+    id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+    title VARCHAR(30) UNIQUE NOT NULL,
+    description VARCHAR(100),
+    price FLOAT NOT NULL,
+    img_url VARCHAR(150),
+    category_id INT,
+    FOREIGN KEY (category_id)
+        REFERENCES categories (id),
+    favorite BOOLEAN
+);"""
+
+
 class MySQLAdapter:
     def __init__(self, *args, **kwargs):
         self.connection = pymysql.connect(host='localhost',
@@ -52,17 +72,56 @@ class MySQLAdapter:
         except:
             return self.return_object("ERROR", "Internal error", None)
 
-    def add_or_edit_product():
-        pass
+    def add_or_edit_product(self, product_Data):
+        if product_Data["title"] == "":
+            return self.return_object("ERROR", "Missing parameters", None)
+        if product_Data["category"] == "":
+            return self.return_object("ERROR", "Category not found", None)
+        else:
+            # try:
+            with self.connection.cursor() as c:
+                if(product_Data["id"] != ""):
+                    c.execute('DELETE FROM products WHERE id = %s;', product_Data["id"] )
+                creation_query = """
+                INSERT INTO `products`
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """
+                product_Data["favorite"] = 1 if (
+                    "favorite" in product_Data.keys()) == "on" else 0
+                c.execute(creation_query, (None, product_Data["title"], product_Data["desc"], product_Data["price"],
+                                           product_Data["img_url"], product_Data["category"], product_Data["favorite"]))
+                self.connection.commit()
+                return self.return_object("SUCCESS", None, c.lastrowid)
+            # except:
+            #     return self.return_object("ERROR", "Internal error", None)
 
-    def get_product():
-        pass
+    def get_product(self, id):
+        # try
+        with self.connection.cursor() as c:
+            c.execute('SELECT * FROM products WHERE id = %s', id)
+            product = c.fetchone()
+            if(product is None):
+                return self.return_object("ERROR", "Product not found", None)
+            return self.return_object("SUCCESS", None, product)
+     # except:
+            #     return self.return_object("ERROR", "Internal error", None)
 
-    def delete_product(id):
-        pass
+    def delete_product(self, id):
+        try:
+            with self.connection.cursor() as c:
+                c.execute('DELETE FROM products WHERE id = %s', id)
+                return self.return_object("SUCCESS", None, None)
+        except:
+            return self.return_object("ERROR", "Internal error", None)
 
-    def list_products():
-        pass
+    def list_products(self):
+        with self.connection.cursor() as c:
+            c.execute('SELECT * FROM products')
+            product = c.fetchall()
+            return self.return_object("SUCCESS", None, product)
 
-    def get_products_by_category():
-        pass
+    def get_products_by_category(self, id):
+        with self.connection.cursor() as c:
+            c.execute('SELECT * FROM products WHERE category_id = %s', id)
+            product = c.fetchall()
+            return self.return_object("SUCCESS", None, product)

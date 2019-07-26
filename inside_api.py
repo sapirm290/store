@@ -44,27 +44,69 @@ def list_categories():
 
 @post('/product')
 def add_or_edit_product():
-    db_response = db.add_or_edit_product(request.json)
+    db_response = db.add_or_edit_product(request.forms)
     if db_response["STATUS"] == "ERROR":
+        if db_response["MSG"] == "Category not found":
+            response.status = 404
+        if db_response["MSG"] == "Misssing parameters":
+            response.status = 400
         response.status = 500
+    else:
+        response.status = 201
     return db_response
 
 
-@get('product/<id>')
-def get_product():
-    pass
+@get('/product/<id>')
+def get_product(id):
+    db_response = db.get_product(id)
+    if db_response["STATUS"] == "ERROR":
+        if db_response["MSG"] == "Product not found":
+            response.status = 404
+        else:
+            response.status = 500
+    else:
+        response.status = 200
+        db_response["PRODUCT"] = db_response.pop("DATA")
+        db_response["PRODUCT"]["category"] = db_response["PRODUCT"].pop(
+            "category_id")
+    return json.dumps(db_response)
 
 
-@delete('product/<id>')
+@delete('/product/<id>')
 def delete_product(id):
-    pass
+    db_response = db.delete_product(id)
+    if db_response["MSG"] == "Category not found":
+        response.status = 404
+    if db_response["MSG"] == "Internal error":
+        response.status = 500
+    else:
+        response.status = 201
+    return json.dumps(db_response)
 
 
-@get('products')
+@get('/products')
 def list_products():
-    pass
+    db_response = db.list_products()
+    if db_response["STATUS"] == "ERROR":
+        response.status = 500
+    else:
+        db_response["PRODUCTS"] = db_response.pop("DATA")
+        for prod in db_response["PRODUCTS"]:
+            prod["category"] = prod.pop(
+                "category_id")
+        response.status = 200
+    return json.dumps(db_response)
 
 
-@get('category/<id>/products')
-def get_products_by_category():
-    pass
+@get('/category/<id>/products')
+def get_products_by_category(id):
+    db_response = db.get_products_by_category(id)
+    if db_response["STATUS"] == "ERROR":
+        response.status = 500
+    else:
+        db_response["PRODUCTS"] = db_response.pop("DATA")
+        for prod in db_response["PRODUCTS"]:
+            prod["category"] = prod.pop(
+                "category_id")
+        response.status = 200
+    return json.dumps(db_response)
